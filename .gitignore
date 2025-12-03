@@ -1,0 +1,6 @@
+# arx-sdk directory
+arx-sdk/build
+arx-sdk/__pycache__
+arx-sdk/*cpython*.so
+arx-sdk/python/data
+arx-sdk/build*
