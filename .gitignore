@@ -4,3 +4,6 @@ arx-sdk/__pycache__
 arx-sdk/*cpython*.so
 arx-sdk/python/data
 arx-sdk/build*
+
+# policy directory
+policy/diffusion_policy/data
