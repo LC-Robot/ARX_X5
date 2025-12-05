@@ -6,11 +6,17 @@ import numpy as np
 import sys
 import os
 from PIL import Image
-from utils.type import get_numpy, to_numpy
-from utils.realsense_d435 import RealsenseAPI
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from type import get_numpy, to_numpy
+from realsense_d435 import RealsenseAPI
+# Adjust paths to find your utils
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(ROOT_DIR)
-os.chdir(ROOT_DIR)
+
+# Add path
+ARX5_SDK_PATH = os.path.join(ROOT_DIR, "../arx5-sdk/python")
+UTILS_PATH = os.path.join(ROOT_DIR, "../utils")
+sys.path.insert(0, os.path.abspath(ARX5_SDK_PATH))
+sys.path.insert(0, os.path.abspath(UTILS_PATH))
 
 from arx5_interface import Arx5CartesianController, EEFState, Gain, LogLevel
 
@@ -93,7 +99,7 @@ class DataCollector:
             out.release()
             print(f"Saved camera {cam_idx} video to: {video_filename}")
 
-    def save_data(self, save_path, episode_idx, is_compressed=False, is_save_video=True, is_save_hdf5=True):
+    def save_data(self, save_path, episode_idx, is_compressed=False, is_save_video=True, is_save_hdf5=True, fps=30):
         """Save data as .npy file with dictionary structure, optionally also save as HDF5."""
         saving_data = to_numpy(self.data_dict, self.device)
         
@@ -113,7 +119,7 @@ class DataCollector:
         if is_save_video:
             if self.is_image_encode:
                 raise ValueError(f"you set is_image_encode, so the video can not be saved.")
-            self.save_multi_cam_videos(saving_data["observation"]["rgb"], save_path)
+            self.save_multi_cam_videos(saving_data["observation"]["rgb"], save_path, fps=fps)
         
         self.clear_data()
 

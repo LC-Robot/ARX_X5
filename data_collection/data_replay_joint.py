@@ -1,5 +1,6 @@
 """
-usage: python data_replay.py X5 can0 /media/le/data/pick_cube/pick_cube/episode_0/data.hdf5
+replay joint trajectory from hdf5 file
+usage: python data_replay_joint.py X5 can0 /media/le/data/pick_cube/pick_cube/episode_0/data.hdf5
 """
 
 import os
@@ -36,7 +37,7 @@ def main(model: str, interface: str, hdf5_path: str):
     # sending joint trajectory
     joint_traj = []
     init_timestamp = controller.get_joint_state().timestamp
-    waypoint_interval_s = 0.05 # single waypoint execution time
+    waypoint_interval_s = 0.01 # single waypoint execution time
     for waypoint in joint_waypoints:
         joint_traj.append(arx5.JointState(waypoint[:6], np.zeros(6), np.zeros(6), waypoint[6]))
         joint_traj[-1].timestamp = init_timestamp + waypoint_interval_s * len(joint_traj)

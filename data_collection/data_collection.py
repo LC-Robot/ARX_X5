@@ -1,3 +1,7 @@
+"""
+usage: python data_collection.py --task_name <task_name> --instruction <instruction> --can_port <can_port> --arm_type <arm_type> --pos_delta <pos_delta> --rot_delta <rot_delta> --gripper_delta <gripper_delta> --save_hdf5 --no_save_video
+example: python data_collection.py --task_name "pick_1" --instruction "pick cube" --can_port "can0" --arm_type 0 --pos_delta 0.2 --rot_delta 1.0 --gripper_delta 0.04 --save_hdf5 --no_save_video
+"""
 import os
 import sys
 import time
@@ -6,12 +10,18 @@ import argparse
 import numpy as np
 from queue import Queue
 from pynput import keyboard
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Adjust paths to find your utils
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(ROOT_DIR)
-os.chdir(ROOT_DIR)
+
+# Add path
+ARX5_SDK_PATH = os.path.join(ROOT_DIR, "../arx5-sdk/python")
+UTILS_PATH = os.path.join(ROOT_DIR, "../utils")
+sys.path.insert(0, os.path.abspath(ARX5_SDK_PATH))
+sys.path.insert(0, os.path.abspath(UTILS_PATH))
 
 from arx5_interface import Arx5CartesianController, EEFState, Gain, LogLevel
-from utils.realsense_d435 import RealsenseAPI
+from realsense_d435 import RealsenseAPI
 from data_collector import DataCollector
 
 class RealDataCollection:
@@ -29,10 +39,10 @@ class RealDataCollection:
         # 控制参数
         self.xyzrpy = np.zeros(6)  # 累积的末端位姿变化
         self.gripper_pos = 0.0  # 夹爪位置
-        self.control_frequency = 100  # Hz
+        self.control_frequency = 10  # Hz
         self.control_time_step = 1.0 / self.control_frequency
         self.init_time = time.time()
-        self.window_size = 5
+        self.window_size = 1
         self.keyboard_queue = Queue(self.window_size)
         self.robot_config = controller.get_robot_config()
         self.controller_config = controller.get_controller_config()
@@ -249,6 +259,12 @@ class RealDataCollection:
                     save_action = {
                         "position": joint_pos_array,  
                         "gripper_width": current_joint_state.gripper_pos,  
+
+                        "eef_delta_pos": delta_pos,
+                        "eef_delta_euler": delta_rot,
+
+                        "eef_abs_pos": target_pose_6d[:3].copy(),
+                        "eef_abs_euler": target_pose_6d[3:].copy(),
                     }
                     
                     # 收集数据
@@ -351,7 +367,8 @@ class RealDataCollection:
             episode_dir, 
             self.episode_idx,
             is_save_video=not self.args.no_save_video,
-            is_save_hdf5=self.args.save_hdf5
+            is_save_hdf5=self.args.save_hdf5,
+            fps = self.control_frequency
         )
 
         # Save metadata
@@ -382,9 +399,9 @@ def get_arguments():
     parser.add_argument("--instruction", type=str, required=True, help="任务描述")
     parser.add_argument("--can_port", type=str, default="can0", help="CAN端口")
     parser.add_argument("--arm_type", type=int, default=0, help="机械臂类型 (0/1/2)")
-    parser.add_argument("--pos_delta", type=float, default=0.2, help="位置控制增量 (m)")
-    parser.add_argument("--rot_delta", type=float, default=1.0, help="旋转控制增量 (rad)")
-    parser.add_argument("--gripper_delta", type=float, default=0.04, help="夹爪控制增量")
+    parser.add_argument("--pos_delta", type=float, default=0.1, help="位置控制增量 (m)")
+    parser.add_argument("--rot_delta", type=float, default=0.5, help="旋转控制增量 (rad)")
+    parser.add_argument("--gripper_delta", type=float, default=0.05, help="夹爪控制增量")
     parser.add_argument("--save_hdf5", action="store_true", default=True, help="同时保存为 HDF5 格式")
     parser.add_argument("--no_save_video", action="store_true", help="不保存视频")
     return parser.parse_args()
