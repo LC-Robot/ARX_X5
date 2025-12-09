@@ -191,7 +191,7 @@ def process_task_directory_streaming(task_dir, output_zarr, use_compression=True
     action_arr = data_group.create_dataset(
         'action',
         shape=(total_steps, action_dim),
-        chunks=True,
+        chunks=(100, action_dim),
         dtype=np.float32,
         compressor=compressor
     )
@@ -199,7 +199,7 @@ def process_task_directory_streaming(task_dir, output_zarr, use_compression=True
     state_arr = data_group.create_dataset(
         'state',
         shape=(total_steps, state_dim),
-        chunks=True,
+        chunks=(100, state_dim),
         dtype=np.float32,
         compressor=compressor
     )
