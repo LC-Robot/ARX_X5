@@ -1,5 +1,5 @@
 """
-usage: python data_collection.py --task_name <task_name> --instruction <instruction> --can_port <can_port> --arm_type <arm_type> --pos_delta <pos_delta> --rot_delta <rot_delta> --gripper_delta <gripper_delta> --save_hdf5 --no_save_video
+usage: python data_collection.py --task_name <task_name> --instruction <instruction> --can_port <can_port> --arm_type <arm_type> --pos_delta <pos_delta> --rot_delta <rot_delta> --gripper_delta <gripper_delta> --save_hdf5 --no_save_video --no_show_images
 example: python data_collection.py --task_name "pick_1" --instruction "pick cube" --can_port "can0" --arm_type 0 --pos_delta 0.2 --rot_delta 1.0 --gripper_delta 0.04 --save_hdf5 --no_save_video
 """
 import os
@@ -8,6 +8,7 @@ import time
 import json
 import argparse
 import numpy as np
+import cv2
 from queue import Queue
 from pynput import keyboard
 # Adjust paths to find your utils
@@ -20,7 +21,7 @@ UTILS_PATH = os.path.join(ROOT_DIR, "../utils")
 sys.path.insert(0, os.path.abspath(ARX5_SDK_PATH))
 sys.path.insert(0, os.path.abspath(UTILS_PATH))
 
-from arx5_interface import Arx5CartesianController, EEFState, Gain, LogLevel
+from arx5_interface import Arx5CartesianController, EEFState, Gain, LogLevel, JointState
 from realsense_d435 import RealsenseAPI
 from data_collector import DataCollector
 
@@ -54,10 +55,77 @@ class RealDataCollection:
         self.gripper_delta = args.gripper_delta  # 夹爪增量
         
         self.is_collecting = False  # 是否正在采集数据
+        self.show_images = not args.no_show_images  # 是否显示图像
+        self.image_window_name = "Camera Views"  # 图像窗口名称
+    
+    def smooth_move_to_pose(self, target_pose_6d, target_gripper_pos=0.0, duration=3.0):
+        # 获取当前位姿
+        current_eef = self.controller.get_eef_state()
+        current_pose_6d = np.array(current_eef.pose_6d()).copy()
+        current_gripper_pos = current_eef.gripper_pos
+        
+        # 计算需要的步数
+        num_steps = int(duration * self.control_frequency)
+        
+        # 生成插值轨迹
+        start_time = time.monotonic()
+        
+        for step in range(num_steps + 1):
+            # 计算插值因子（使用平滑的 S 曲线）
+            t = step / num_steps
+            # 使用三次平滑插值 (smoothstep)
+            smooth_t = t * t * (3.0 - 2.0 * t)
+            
+            # 插值位姿
+            interpolated_pose = current_pose_6d + smooth_t * (target_pose_6d - current_pose_6d)
+            interpolated_gripper = current_gripper_pos + smooth_t * (target_gripper_pos - current_gripper_pos)
+            
+            # 发送命令
+            current_timestamp = self.controller.get_timestamp()
+            eef_cmd = EEFState()
+            eef_cmd.pose_6d()[:] = interpolated_pose
+            eef_cmd.gripper_pos = interpolated_gripper
+            eef_cmd.timestamp = current_timestamp + self.preview_time
+            self.controller.set_eef_cmd(eef_cmd)
+            
+            # 等待下一个控制周期
+            target_time = start_time + (step + 1) * self.control_time_step
+            while time.monotonic() < target_time:
+                pass
+
+        time.sleep(0.5)  # 稳定等待
 
     def reset_xyzrpy(self):
         """重置累积的位姿变化"""
         self.xyzrpy = np.zeros(6)
+    
+    def visualize_cameras(self, rgb_images):
+        """
+        显示多个相机的图像
+        Args:
+            rgb_images: numpy array of shape [n_cams, height, width, 3]
+        """
+        if rgb_images is None or not self.show_images:
+            return
+        
+        n_cams = rgb_images.shape[0]
+        
+        if n_cams == 0:
+            return
+        
+        # 如果只有一个相机，直接显示
+        if n_cams == 1:
+            img_bgr = cv2.cvtColor(rgb_images[0], cv2.COLOR_RGB2BGR)
+            # 添加状态信息
+            status_text = "collecting" if self.is_collecting else "stop"
+            color = (0, 255, 0) if self.is_collecting else (0, 165, 255)
+            cv2.putText(img_bgr, f"Status: {status_text}", (10, 30), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+            cv2.putText(img_bgr, f"Steps: {self.action_steps}", (10, 60), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+            cv2.imshow(self.image_window_name, img_bgr)
+        # 处理窗口事件（1ms等待，不阻塞）
+        cv2.waitKey(1)
 
     def keyboard_control_loop(self):
         """使用键盘控制机械臂并采集数据"""
@@ -100,6 +168,11 @@ class RealDataCollection:
         # 启动键盘监听器
         listener = keyboard.Listener(on_press=on_press, on_release=on_release)
         listener.start()
+        
+        # 创建图像显示窗口
+        if self.show_images:
+            cv2.namedWindow(self.image_window_name, cv2.WINDOW_NORMAL)
+            cv2.resizeWindow(self.image_window_name, 640, 480)
 
         def get_filtered_keyboard_output(key_pressed: dict):
             state = np.zeros(6, dtype=np.float64)
@@ -158,9 +231,10 @@ class RealDataCollection:
         last_i_press_time = 0
         last_r_press_time = 0
         
-        # 初始化目标位姿和夹爪位置（在循环外部，避免每次重置）
-        target_pose_6d = self.controller.get_home_pose()
-        target_gripper_pos = 0.0
+        # 初始化目标位姿和夹爪位置（从当前位置开始）
+        current_eef = self.controller.get_eef_state()
+        target_pose_6d = np.array(current_eef.pose_6d()).copy()
+        target_gripper_pos = current_eef.gripper_pos
         
         try:
             while not should_exit:
@@ -171,7 +245,7 @@ class RealDataCollection:
                     ee_pose = self.controller.get_eef_state()
                     joint_pos = self.controller.get_joint_state()
                     
-                    status_text = "进行中" if self.is_collecting else "暂停"
+                    status_text = "collecting" if self.is_collecting else "stop"
                     print(f"\r采集状态: {status_text} | 步数: {self.action_steps} | "
                           f"末端位置: [{ee_pose.pose_6d()[0]:.3f}, {ee_pose.pose_6d()[1]:.3f}, {ee_pose.pose_6d()[2]:.3f}] | "
                           f"夹爪: {joint_pos.gripper_pos:.3f}    ", end='', flush=True)
@@ -180,7 +254,7 @@ class RealDataCollection:
                 # 空格键 - 开始/暂停采集
                 if key_pressed[keyboard.Key.space] and current_time - last_space_press_time > 0.3:
                     self.is_collecting = not self.is_collecting
-                    status = "开始" if self.is_collecting else "暂停"
+                    status = "start" if self.is_collecting else "stop"
                     print(f"\n[INFO] {status}数据采集")
                     last_space_press_time = current_time
                 
@@ -247,6 +321,14 @@ class RealDataCollection:
                 eef_cmd.gripper_pos = target_gripper_pos
                 eef_cmd.timestamp = current_timestamp + self.preview_time
                 self.controller.set_eef_cmd(eef_cmd)
+                
+                # 获取并显示相机图像
+                if self.show_images and loop_cnt % 3 == 0:  # 每3帧显示一次，减少计算开销
+                    try:
+                        rgb_images = self.cameras.get_rgb()
+                        self.visualize_cameras(rgb_images)
+                    except Exception as e:
+                        print(f"\n[WARNING] 图像显示错误: {e}")
 
                 # 如果正在采集数据，记录数据
                 if self.is_collecting:
@@ -291,10 +373,17 @@ class RealDataCollection:
             save_data = True
         
         finally:
+            self.controller.reset_to_home()
+
             # 停止键盘监听器
             listener.stop()
             listener.join(timeout=1.0)
             print("\n[INFO] 键盘监听器已停止")
+            
+            # 关闭图像显示窗口
+            if self.show_images:
+                cv2.destroyAllWindows()
+                print("[INFO] 图像显示窗口已关闭")
         
         return save_data
                 
@@ -404,6 +493,8 @@ def get_arguments():
     parser.add_argument("--gripper_delta", type=float, default=0.05, help="夹爪控制增量")
     parser.add_argument("--save_hdf5", action="store_true", default=True, help="同时保存为 HDF5 格式")
     parser.add_argument("--no_save_video", action="store_true", help="不保存视频")
+    parser.add_argument("--no_show_images", action="store_true", help="不显示实时图像窗口")
+    
     return parser.parse_args()
 
 def main():
@@ -427,6 +518,11 @@ def main():
     print("[INFO] 机械臂回零...")
     controller.reset_to_home()
     time.sleep(2)
+
+    # 平滑移动到初始位姿（适用于腕部相机）
+    init_ee_pose = np.array([0.2398, 0.0012, 0.2185, 0.0039, 0.8967, 0.0035])
+    init_gripper_pos = 0.0
+    collection.smooth_move_to_pose(init_ee_pose, init_gripper_pos, duration=3.0)
     
     # 开始数据采集
     save_data_flag = collection.collect_data()

@@ -37,7 +37,7 @@ def main(model: str, interface: str, hdf5_path: str):
     # sending joint trajectory
     joint_traj = []
     init_timestamp = controller.get_joint_state().timestamp
-    waypoint_interval_s = 0.01 # single waypoint execution time
+    waypoint_interval_s = 0.5
     for waypoint in joint_waypoints:
         joint_traj.append(arx5.JointState(waypoint[:6], np.zeros(6), np.zeros(6), waypoint[6]))
         joint_traj[-1].timestamp = init_timestamp + waypoint_interval_s * len(joint_traj)
