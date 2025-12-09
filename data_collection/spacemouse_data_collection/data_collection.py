@@ -89,6 +89,7 @@ class SpacemouseDataCollection:
         self.ori_speed = 0.8
         self.gripper_speed = 0.04
         self.is_collecting = False
+        self.UPDATE_TRAJ = True
 
     def collect(self):
         print("[INFO] Use SpaceMouse to collect. Space: start/pause, Esc: quit without save, q: save and quit")
@@ -96,8 +97,9 @@ class SpacemouseDataCollection:
         save_flag = False
 
         # initialize state
-        target_pose_6d = self.controller.get_home_pose()
-        target_gripper_pos = 0.0
+        current_eef = self.controller.get_eef_state()
+        target_pose_6d = np.array(current_eef.pose_6d()).copy()
+        target_gripper_pos = current_eef.gripper_pos
 
         keyboard_state = {keyboard.Key.space: False, keyboard.Key.esc: False, keyboard.KeyCode.from_char("q"): False}
         def on_press(k):
@@ -171,7 +173,11 @@ class SpacemouseDataCollection:
                     eef_cmd.pose_6d()[:] = target_pose_6d
                     eef_cmd.gripper_pos = target_gripper_pos
                     eef_cmd.timestamp = ts + self.preview_time
-                    self.controller.set_eef_cmd(eef_cmd)
+
+                    if self.UPDATE_TRAJ:
+                        self.controller.set_eef_traj([eef_cmd])
+                    else:
+                        self.controller.set_eef_cmd(eef_cmd)
 
                     # record data
                     if self.is_collecting:
@@ -230,6 +236,35 @@ class SpacemouseDataCollection:
                     pass
         return (max(ids) + 1) if ids else 0
 
+    def smooth_move_to_pose(self, target_pose_6d, target_gripper_pos=0.0, duration=3.0):
+        current_eef = self.controller.get_eef_state()
+        current_pose_6d = np.array(current_eef.pose_6d()).copy()
+        current_gripper_pos = current_eef.gripper_pos
+        
+        num_steps = int(duration / self.control_dt)
+        
+        start_time = time.monotonic()
+        
+        for step in range(num_steps + 1):
+            t = step / num_steps
+            smooth_t = t * t * (3.0 - 2.0 * t)
+            
+            interpolated_pose = current_pose_6d + smooth_t * (target_pose_6d - current_pose_6d)
+            interpolated_gripper = current_gripper_pos + smooth_t * (target_gripper_pos - current_gripper_pos)
+            
+            current_timestamp = self.controller.get_timestamp()
+            eef_cmd = EEFState()
+            eef_cmd.pose_6d()[:] = interpolated_pose
+            eef_cmd.gripper_pos = interpolated_gripper
+            eef_cmd.timestamp = current_timestamp + self.preview_time
+            self.controller.set_eef_cmd(eef_cmd)
+            
+            target_time = start_time + (step + 1) * self.control_dt
+            while time.monotonic() < target_time:
+                pass
+
+        time.sleep(0.5)
+
 
 def get_arguments():
     p = argparse.ArgumentParser(description="SpaceMouse data collection")
@@ -267,6 +302,13 @@ def main():
     cam_thread.start()
 
     collector = SpacemouseDataCollection(args, controller, cameras, cam_buffer)
+
+    # move to a better observation pose
+    init_pose_6d = np.array([0.2398, 0.0012, 0.2185, 0.0039, 0.8967, 0.0035])
+    init_gripper_pos = 0.0
+    collector.smooth_move_to_pose(init_pose_6d, init_gripper_pos, duration=3.0)
+    time.sleep(1.0)
+    
     save_flag = collector.collect()
 
     stop_event.set()
