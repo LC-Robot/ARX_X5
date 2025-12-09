@@ -43,12 +43,10 @@ def get_episode_metadata(ep_path):
         if 'action/end_effector/gripper_width' in f:
             action_dim += 1
         
-        # Get image information
         img_shape = None
         if 'observation/rgb' in f:
             rgb_group = f['observation/rgb']
             if len(rgb_group.keys()) > 0:
-                # Read the first frame to get shape
                 first_frame = rgb_group['0'][:]
                 if first_frame.ndim == 4:
                     # [n_cams, H, W, 3] -> Take first camera
