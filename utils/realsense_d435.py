@@ -6,7 +6,7 @@ from collections import OrderedDict
 class RealsenseAPI:
     """Wrapper that implements boilerplate code for RealSense cameras"""
 
-    def __init__(self, height=480, width=640, fps=30, warm_start=60):
+    def __init__(self, height=240, width=320, fps=30, warm_start=60):
         self.height = height
         self.width = width
         self.fps = fps
