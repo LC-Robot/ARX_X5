@@ -1,160 +1,236 @@
 #!/usr/bin/env python3
 """
-Visualize end-effector trajectory (position & orientation) from HDF5.
-Plots XYZ position and RPY orientation curves, with simple jitter analysis.
+Advanced End-Effector Trajectory Analyzer
+-----------------------------------------
+Visualizes Position (XYZ) and Orientation (RPY) from HDF5 data.
+Performs data quality assessment based on:
+1. Continuity (handling Euler angle wrapping)
+2. Smoothness (Minimizing Jerk)
+3. High-frequency oscillation detection (with noise deadzones)
 """
 
 import os
-import sys
 import argparse
 import numpy as np
 import h5py
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 
-# font settings
-plt.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial Unicode MS', 'sans-serif']
-plt.rcParams['axes.unicode_minus'] = False
+# --- Configuration ---
+# Threshold below which changes are considered sensor noise (meters for Pos, radians for Rot)
+NOISE_FLOOR_POS = 1e-4  # 0.1 mm
+NOISE_FLOOR_ROT = 1e-3  # ~0.05 degrees
 
+# Threshold for "Bad" Jerk (heuristic, depends on robot speed)
+# If Mean Absolute Jerk exceeds this, the motion is considered non-smooth.
+JERK_THRESHOLD_POS = 100.0 
+JERK_THRESHOLD_ROT = 50.0
 
-def jitter_analysis(data, labels, thresh_jump=0.02, high_freq_ratio=50):
+def analyze_smoothness(data, dt, label, is_angle=False):
     """
-    Simple jitter diagnostics on each dimension.
-    - high-frequency oscillation: sign changes of diff over samples
-    - large jumps: max absolute diff
+    Calculates derivatives and evaluates smoothness/jitter.
+    
+    Args:
+        data: 1D numpy array of trajectory data.
+        dt: Time interval between steps (seconds).
+        label: Name of the dimension (e.g., "X", "Yaw").
+        is_angle: Boolean, if True, applies unwrapping.
+    
+    Returns:
+        dict: Statistics containing mean_jerk, oscillation_ratio, etc.
     """
-    print("\n[INFO] Jitter analysis:")
-    for i, name in enumerate(labels):
-        diff = np.diff(data[:, i])
-        if len(diff) == 0:
-            continue
-        sign_changes = np.sum(np.diff(np.sign(diff)) != 0)
-        vibration_ratio = sign_changes / len(diff) * 100
-        max_jump = np.max(np.abs(diff))
+    # 1. Preprocessing: Unwrap angles to remove 2*pi jumps
+    if is_angle:
+        data = np.unwrap(data)
 
+    # 2. Derivative Calculation (Finite Differences)
+    # Velocity (1st derivative), Acceleration (2nd), Jerk (3rd)
+    vel = np.gradient(data, dt)
+    acc = np.gradient(vel, dt)
+    jerk = np.gradient(acc, dt)
+
+    # 3. Jitter Metric A: Mean Absolute Jerk (Physical Smoothness)
+    # Lower is better. High jerk = jerky/shaky motion.
+    mean_jerk = np.mean(np.abs(jerk))
+
+    # 4. Jitter Metric B: Direction Flips (Oscillation)
+    # We only count a flip if the movement magnitude is larger than the noise floor.
+    # This prevents counting sensor static noise as "high frequency jitter".
+    diff = np.diff(data)
+    noise_floor = NOISE_FLOOR_ROT if is_angle else NOISE_FLOOR_POS
+    
+    # Filter only significant movements
+    significant_moves = diff[np.abs(diff) > noise_floor]
+    
+    if len(significant_moves) > 1:
+        # Count how many times the sign (+/-) changes
+        sign_changes = np.sum(np.diff(np.sign(significant_moves)) != 0)
+        oscillation_ratio = (sign_changes / len(significant_moves)) * 100
+    else:
+        oscillation_ratio = 0.0
+
+    return {
+        "mean_jerk": mean_jerk,
+        "oscillation_ratio": oscillation_ratio,
+        "data_unwrapped": data, # Return processed data for plotting
+        "max_val": np.max(data),
+        "min_val": np.min(data)
+    }
+
+def print_report(labels, stats_list, is_angle):
+    """Prints a formatted table of the analysis results."""
+    print("-" * 80)
+    kind = "Orientation (RPY)" if is_angle else "Position (XYZ)"
+    print(f"Analysis Report: {kind}")
+    print("-" * 80)
+    print(f"{'Dim':<6} | {'Jerk Score':<12} | {'Oscillation %':<15} | {'Status'}")
+    print("-" * 80)
+
+    jerk_thresh = JERK_THRESHOLD_ROT if is_angle else JERK_THRESHOLD_POS
+
+    for i, label in enumerate(labels):
+        s = stats_list[i]
+        jerk = s['mean_jerk']
+        osc = s['oscillation_ratio']
+        
+        # Determine Status
         issues = []
-        if vibration_ratio > high_freq_ratio:
-            issues.append(f"high-frequency ({vibration_ratio:.1f}% sign changes)")
-        if max_jump > thresh_jump:
-            issues.append(f"large jump {max_jump:.4f}")
+        if jerk > jerk_thresh:
+            issues.append("Rough Motion")
+        if osc > 40.0: # If direction flips more than 40% of the time during movement
+            issues.append("High Freq Jitter")
+        
+        status_str = ", ".join(issues) if issues else "OK (Smooth)"
+        
+        print(f"{label:<6} | {jerk:<12.2f} | {osc:<14.1f}% | {status_str}")
+    print("")
 
-        if issues:
-            print(f"  ⚠️  {name}: " + "; ".join(issues))
-        else:
-            print(f"  {name}: OK (max jump {max_jump:.4f}, vibration {vibration_ratio:.1f}%)")
-    print()
-
-
-def plot_endpose(hdf5_path, save_path=None, show=True):
-    """
-    Plot end-effector position (XYZ) and orientation (roll/pitch/yaw) over time.
-    """
+def plot_trajectory(hdf5_path, save_path=None, no_show=False):
+    """Loads data, analyzes it, and visualizes it."""
+    
+    # --- Load Data ---
     if not os.path.exists(hdf5_path):
         print(f"[ERROR] File not found: {hdf5_path}")
         return
 
     try:
         with h5py.File(hdf5_path, "r") as f:
-            if "state/end_effector/position" not in f or "state/end_effector/euler" not in f:
-                print("[ERROR] Missing end_effector position or euler in file.")
+            # Modify these keys based on your specific HDF5 structure
+            # Common structures: 'state/end_effector_pose', 'action', etc.
+            if "state/end_effector/position" not in f:
+                print("[ERROR] Key 'state/end_effector/position' not found.")
                 return
-            pos = f["state/end_effector/position"][:]  # [N,3]
-            euler = f["state/end_effector/euler"][:]    # [N,3]
-            timestamps = f["observation/rgb_timestamp"][:] if "observation/rgb_timestamp" in f else None
+            
+            pos = f["state/end_effector/position"][:]  # Shape: [N, 3]
+            euler = f["state/end_effector/euler"][:]    # Shape: [N, 3]
+            
+            # Try to get timestamps, otherwise assume 50Hz (0.02s)
+            if "observation/rgb_timestamp" in f:
+                ts = f["observation/rgb_timestamp"][:]
+                # Handle cases where timestamp might be relative or absolute
+                ts = ts - ts[0]
+                # Calculate average dt
+                dt = np.mean(np.diff(ts)) if len(ts) > 1 else 0.02
+                # Sanity check for dt
+                if dt <= 0 or np.isnan(dt): dt = 0.02
+            else:
+                ts = np.arange(len(pos)) * 0.02
+                dt = 0.02
+                
     except Exception as e:
-        print(f"[ERROR] Failed to read file: {e}")
+        print(f"[ERROR] Failed to load HDF5: {e}")
         return
 
-    n_steps = pos.shape[0]
-    print(f"[INFO] Loaded end-effector data: steps={n_steps}")
+    print(f"[INFO] Loaded {len(pos)} steps. Estimated sampling rate: {1/dt:.1f} Hz")
 
-    # time axis
-    if timestamps is not None and len(timestamps) == n_steps:
-        t_axis = timestamps - timestamps[0]
-        t_label = "Time (s)"
-        print(f"[INFO] Time span: {t_axis[0]:.2f} - {t_axis[-1]:.2f} s")
-    else:
-        t_axis = np.arange(n_steps)
-        t_label = "Steps"
-        print(f"[INFO] Step range: 0 - {n_steps}")
-
-    # jitter diagnostics
-    jitter_analysis(pos, ["X", "Y", "Z"], thresh_jump=0.01, high_freq_ratio=50)
-    jitter_analysis(euler, ["Roll", "Pitch", "Yaw"], thresh_jump=0.02, high_freq_ratio=50)
-
-    # downsample for display if too long
-    def downsample(arr, t):
-        if arr.shape[0] > 5000:
-            step = max(1, arr.shape[0] // 2000)
-            idx = np.arange(0, arr.shape[0], step)
-            return arr[idx], t[idx], idx
-        return arr, t, None
-
-    pos_plot, t_pos, _ = downsample(pos, t_axis)
-    euler_plot, t_eu, _ = downsample(euler, t_axis)
-
-    fig = plt.figure(figsize=(14, 8))
-    ep_name = os.path.basename(os.path.dirname(hdf5_path))
-    fig.suptitle(f'End-effector Trajectory - {ep_name}', fontsize=14, fontweight='bold')
-
-    gs = GridSpec(2, 3, figure=fig, hspace=0.3, wspace=0.25)
+    # --- Analysis Phase ---
     labels_pos = ["X", "Y", "Z"]
-    labels_eu = ["Roll", "Pitch", "Yaw"]
-    colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F']
+    labels_rot = ["Roll", "Pitch", "Yaw"]
+    
+    pos_stats = []
+    rot_stats = []
 
-    # position plots
+    # Analyze Position
     for i in range(3):
-        ax = fig.add_subplot(gs[0, i])
-        ax.plot(t_pos, pos_plot[:, i], color=colors[i], linewidth=1.2)
-        ax.set_xlabel(t_label)
-        ax.set_ylabel(f'{labels_pos[i]} (m)')
-        ax.set_title(f'{labels_pos[i]} position', fontsize=11, fontweight='bold')
-        ax.grid(True, alpha=0.3, linestyle='--')
-        stats = f"Min: {np.min(pos[:, i]):+.4f}\nMax: {np.max(pos[:, i]):+.4f}\nStd: {np.std(pos[:, i]):.4f}"
-        ax.text(0.02, 0.98, stats, transform=ax.transAxes, fontsize=7, va='top',
-                family='monospace', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.6))
+        res = analyze_smoothness(pos[:, i], dt, labels_pos[i], is_angle=False)
+        pos_stats.append(res)
 
-    # orientation plots
+    # Analyze Rotation
     for i in range(3):
-        ax = fig.add_subplot(gs[1, i])
-        ax.plot(t_eu, euler_plot[:, i], color=colors[i+3], linewidth=1.2)
-        ax.set_xlabel(t_label)
-        ax.set_ylabel(f'{labels_eu[i]} (rad)')
-        ax.set_title(f'{labels_eu[i]} (RPY)', fontsize=11, fontweight='bold')
-        ax.grid(True, alpha=0.3, linestyle='--')
-        stats = f"Min: {np.min(euler[:, i]):+.4f}\nMax: {np.max(euler[:, i]):+.4f}\nStd: {np.std(euler[:, i]):.4f}"
-        ax.text(0.02, 0.98, stats, transform=ax.transAxes, fontsize=7, va='top',
-                family='monospace', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.6))
+        res = analyze_smoothness(euler[:, i], dt, labels_rot[i], is_angle=True)
+        rot_stats.append(res)
+
+    # Print Text Report
+    print_report(labels_pos, pos_stats, is_angle=False)
+    print_report(labels_rot, rot_stats, is_angle=True)
+
+    # --- Visualization Phase ---
+    fig = plt.figure(figsize=(16, 9))
+    filename = os.path.basename(hdf5_path)
+    fig.suptitle(f'Trajectory Quality Analysis: {filename}\n(Dt={dt:.3f}s)', fontsize=14, fontweight='bold')
+
+    gs = GridSpec(2, 3, figure=fig, hspace=0.35, wspace=0.25)
+    
+    # Helper to plot one subplot
+    def add_subplot(row, col, time_axis, data, stats, name, unit, color):
+        ax = fig.add_subplot(gs[row, col])
+        ax.plot(time_axis, data, color=color, linewidth=1.5, alpha=0.9)
+        
+        # Add a small smoothing comparison (optional, shows trend)
+        # ax.plot(time_axis, data, color='k', alpha=0.2, linewidth=3) 
+
+        ax.set_title(f"{name}", fontsize=12, fontweight='bold')
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel(f"{name} ({unit})")
+        ax.grid(True, linestyle='--', alpha=0.4)
+        
+        # Annotation Box
+        info_text = (f"Range: [{stats['min_val']:.2f}, {stats['max_val']:.2f}]\n"
+                     f"Jerk: {stats['mean_jerk']:.2f}\n"
+                     f"Oscillation: {stats['oscillation_ratio']:.1f}%")
+        
+        # Color code the box based on quality
+        box_color = 'wheat'
+        if stats['mean_jerk'] > (JERK_THRESHOLD_ROT if unit=='rad' else JERK_THRESHOLD_POS):
+            box_color = '#ffcccc' # Redish for bad data
+
+        ax.text(0.03, 0.95, info_text, transform=ax.transAxes, fontsize=9,
+                verticalalignment='top', family='monospace',
+                bbox=dict(boxstyle='round', facecolor=box_color, alpha=0.8))
+
+    # Plot Position (Row 0)
+    colors_pos = ['#e74c3c', '#27ae60', '#2980b9'] # R, G, B
+    for i in range(3):
+        # Use the unwrapped/processed data from stats
+        data_to_plot = pos_stats[i]['data_unwrapped']
+        add_subplot(0, i, ts, data_to_plot, pos_stats[i], labels_pos[i], "m", colors_pos[i])
+
+    # Plot Orientation (Row 1)
+    colors_rot = ['#e67e22', '#8e44ad', '#16a085'] # Orange, Purple, Teal
+    for i in range(3):
+        # Use the unwrapped/processed data from stats
+        data_to_plot = rot_stats[i]['data_unwrapped']
+        add_subplot(1, i, ts, data_to_plot, rot_stats[i], labels_rot[i], "rad", colors_rot[i])
 
     if save_path:
         plt.savefig(save_path, dpi=150, bbox_inches='tight')
-        print(f"[INFO] Figure saved to: {save_path}")
-    if show:
-        plt.show()
-    return fig
+        print(f"[INFO] Plot saved to: {save_path}")
 
+    if not no_show:
+        plt.show()
 
 def main():
-    parser = argparse.ArgumentParser(description="Visualize end-effector trajectory")
-    parser.add_argument("hdf5_path", type=str, help="HDF5 file path")
-    parser.add_argument("--save", type=str, default=None, help="Path to save figure")
-    parser.add_argument("--no_show", action="store_true", help="Do not show window")
+    parser = argparse.ArgumentParser(description="Robot Trajectory Jitter Analysis")
+    parser.add_argument("hdf5_path", type=str, help="Path to the HDF5 data file")
+    parser.add_argument("--save", type=str, default=None, help="Save the plot to this path (e.g., analysis.png)")
+    parser.add_argument("--no_show", action="store_true", help="Do not open the GUI window")
     args = parser.parse_args()
 
-    print("=" * 70)
-    print("End-effector Trajectory Visualization")
-    print("=" * 70)
-    print(f"File: {args.hdf5_path}")
-    print("=" * 70)
-    print()
-
-    plot_endpose(
-        args.hdf5_path,
-        save_path=args.save,
-        show=not args.no_show,
-    )
-
+    print("=" * 80)
+    print(" JITTER & DATA QUALITY ANALYZER ")
+    print("=" * 80)
+    
+    plot_trajectory(args.hdf5_path, args.save, args.no_show)
 
 if __name__ == "__main__":
     main()
-
