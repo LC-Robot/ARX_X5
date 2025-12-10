@@ -16,8 +16,8 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(ROOT_DIR)
 
 # Add path
-ARX5_SDK_PATH = os.path.join(ROOT_DIR, "../arx5-sdk/python")
-UTILS_PATH = os.path.join(ROOT_DIR, "../utils")
+ARX5_SDK_PATH = os.path.join(ROOT_DIR, "../../arx5-sdk/python")
+UTILS_PATH = os.path.join(ROOT_DIR, "../../utils")
 sys.path.insert(0, os.path.abspath(ARX5_SDK_PATH))
 sys.path.insert(0, os.path.abspath(UTILS_PATH))
 

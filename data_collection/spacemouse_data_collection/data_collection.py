@@ -85,9 +85,9 @@ class SpacemouseDataCollection:
         self.instruction = args.instruction
         self.control_dt = 0.05
         self.preview_time = 0.05
-        self.pos_speed = 0.4
+        self.pos_speed = 0.3
         self.ori_speed = 0.8
-        self.gripper_speed = 0.04
+        self.gripper_speed = 0.08
         self.is_collecting = False
         self.UPDATE_TRAJ = True
 
