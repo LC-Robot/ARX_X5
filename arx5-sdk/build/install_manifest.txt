@@ -1,0 +1,15 @@
+/usr/local/include/arx5-sdk/hardware/arx_can.h
+/usr/local/include/arx5-sdk/hardware/math_ops.h
+/usr/local/include/arx5-sdk/app/common.h
+/usr/local/include/arx5-sdk/app/solver.h
+/usr/local/include/arx5-sdk/app/config.h
+/usr/local/include/arx5-sdk/app/cartesian_controller.h
+/usr/local/include/arx5-sdk/app/controller_base.h
+/usr/local/include/arx5-sdk/app/joint_controller.h
+/usr/local/include/arx5-sdk/utils.h
+/usr/local/include/arx5-sdk/libcan/SocketCAN.h
+/usr/local/include/arx5-sdk/libcan/CANFrame.h
+/usr/local/lib/arx5-sdk/libhardware.so
+/usr/local/lib/arx5-sdk/libsolver.so
+/usr/local/lib/arx5-sdk/libArxJointController.so
+/usr/local/lib/arx5-sdk/libArxCartesianController.so

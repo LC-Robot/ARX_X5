@@ -1,0 +1,80 @@
+[
+{
+  "directory": "/home/le/arx5-sdk/build",
+  "command": "/home/le/anaconda3/envs/arx-py310/bin/x86_64-conda-linux-gnu-c++ -DArxJointController_EXPORTS -DFMT_SHARED -DSDK_ROOT=\\\"/home/le/arx5-sdk/build/..\\\" -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DSPDLOG_SHARED_LIB -I/home/le/arx5-sdk/include -I/home/le/anaconda3/envs/arx-py310/include/urdfdom_headers -I/home/le/anaconda3/envs/arx-py310/include/kdl_parser -isystem /home/le/anaconda3/envs/arx-py310/include/eigen3 -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/le/anaconda3/envs/arx-py310/include -g -std=gnu++14 -fPIC -o CMakeFiles/ArxJointController.dir/src/app/joint_controller.cpp.o -c /home/le/arx5-sdk/src/app/joint_controller.cpp",
+  "file": "/home/le/arx5-sdk/src/app/joint_controller.cpp",
+  "output": "CMakeFiles/ArxJointController.dir/src/app/joint_controller.cpp.o"
+},
+{
+  "directory": "/home/le/arx5-sdk/build",
+  "command": "/home/le/anaconda3/envs/arx-py310/bin/x86_64-conda-linux-gnu-c++ -DArxJointController_EXPORTS -DFMT_SHARED -DSDK_ROOT=\\\"/home/le/arx5-sdk/build/..\\\" -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DSPDLOG_SHARED_LIB -I/home/le/arx5-sdk/include -I/home/le/anaconda3/envs/arx-py310/include/urdfdom_headers -I/home/le/anaconda3/envs/arx-py310/include/kdl_parser -isystem /home/le/anaconda3/envs/arx-py310/include/eigen3 -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/le/anaconda3/envs/arx-py310/include -g -std=gnu++14 -fPIC -o CMakeFiles/ArxJointController.dir/src/app/controller_base.cpp.o -c /home/le/arx5-sdk/src/app/controller_base.cpp",
+  "file": "/home/le/arx5-sdk/src/app/controller_base.cpp",
+  "output": "CMakeFiles/ArxJointController.dir/src/app/controller_base.cpp.o"
+},
+{
+  "directory": "/home/le/arx5-sdk/build",
+  "command": "/home/le/anaconda3/envs/arx-py310/bin/x86_64-conda-linux-gnu-c++ -DArxJointController_EXPORTS -DFMT_SHARED -DSDK_ROOT=\\\"/home/le/arx5-sdk/build/..\\\" -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DSPDLOG_SHARED_LIB -I/home/le/arx5-sdk/include -I/home/le/anaconda3/envs/arx-py310/include/urdfdom_headers -I/home/le/anaconda3/envs/arx-py310/include/kdl_parser -isystem /home/le/anaconda3/envs/arx-py310/include/eigen3 -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/le/anaconda3/envs/arx-py310/include -g -std=gnu++14 -fPIC -o CMakeFiles/ArxJointController.dir/src/utils.cpp.o -c /home/le/arx5-sdk/src/utils.cpp",
+  "file": "/home/le/arx5-sdk/src/utils.cpp",
+  "output": "CMakeFiles/ArxJointController.dir/src/utils.cpp.o"
+},
+{
+  "directory": "/home/le/arx5-sdk/build",
+  "command": "/home/le/anaconda3/envs/arx-py310/bin/x86_64-conda-linux-gnu-c++ -DArxCartesianController_EXPORTS -DFMT_SHARED -DSDK_ROOT=\\\"/home/le/arx5-sdk/build/..\\\" -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DSPDLOG_SHARED_LIB -I/home/le/arx5-sdk/include -I/home/le/anaconda3/envs/arx-py310/include/urdfdom_headers -I/home/le/anaconda3/envs/arx-py310/include/kdl_parser -isystem /home/le/anaconda3/envs/arx-py310/include/eigen3 -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/le/anaconda3/envs/arx-py310/include -g -std=gnu++14 -fPIC -o CMakeFiles/ArxCartesianController.dir/src/app/cartesian_controller.cpp.o -c /home/le/arx5-sdk/src/app/cartesian_controller.cpp",
+  "file": "/home/le/arx5-sdk/src/app/cartesian_controller.cpp",
+  "output": "CMakeFiles/ArxCartesianController.dir/src/app/cartesian_controller.cpp.o"
+},
+{
+  "directory": "/home/le/arx5-sdk/build",
+  "command": "/home/le/anaconda3/envs/arx-py310/bin/x86_64-conda-linux-gnu-c++ -DArxCartesianController_EXPORTS -DFMT_SHARED -DSDK_ROOT=\\\"/home/le/arx5-sdk/build/..\\\" -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DSPDLOG_SHARED_LIB -I/home/le/arx5-sdk/include -I/home/le/anaconda3/envs/arx-py310/include/urdfdom_headers -I/home/le/anaconda3/envs/arx-py310/include/kdl_parser -isystem /home/le/anaconda3/envs/arx-py310/include/eigen3 -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/le/anaconda3/envs/arx-py310/include -g -std=gnu++14 -fPIC -o CMakeFiles/ArxCartesianController.dir/src/app/controller_base.cpp.o -c /home/le/arx5-sdk/src/app/controller_base.cpp",
+  "file": "/home/le/arx5-sdk/src/app/controller_base.cpp",
+  "output": "CMakeFiles/ArxCartesianController.dir/src/app/controller_base.cpp.o"
+},
+{
+  "directory": "/home/le/arx5-sdk/build",
+  "command": "/home/le/anaconda3/envs/arx-py310/bin/x86_64-conda-linux-gnu-c++ -DArxCartesianController_EXPORTS -DFMT_SHARED -DSDK_ROOT=\\\"/home/le/arx5-sdk/build/..\\\" -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DSPDLOG_SHARED_LIB -I/home/le/arx5-sdk/include -I/home/le/anaconda3/envs/arx-py310/include/urdfdom_headers -I/home/le/anaconda3/envs/arx-py310/include/kdl_parser -isystem /home/le/anaconda3/envs/arx-py310/include/eigen3 -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/le/anaconda3/envs/arx-py310/include -g -std=gnu++14 -fPIC -o CMakeFiles/ArxCartesianController.dir/src/utils.cpp.o -c /home/le/arx5-sdk/src/utils.cpp",
+  "file": "/home/le/arx5-sdk/src/utils.cpp",
+  "output": "CMakeFiles/ArxCartesianController.dir/src/utils.cpp.o"
+},
+{
+  "directory": "/home/le/arx5-sdk/build",
+  "command": "/home/le/anaconda3/envs/arx-py310/bin/x86_64-conda-linux-gnu-c++ -DFMT_SHARED -DSDK_ROOT=\\\"/home/le/arx5-sdk/build/..\\\" -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DSPDLOG_SHARED_LIB -I/home/le/arx5-sdk/include -I/home/le/anaconda3/envs/arx-py310/include/urdfdom_headers -I/home/le/anaconda3/envs/arx-py310/include/kdl_parser -isystem /home/le/anaconda3/envs/arx-py310/include/eigen3 -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/le/anaconda3/envs/arx-py310/include -g -std=gnu++14 -fPIE -o CMakeFiles/test_joint_controller.dir/examples/test_joint_controller.cpp.o -c /home/le/arx5-sdk/examples/test_joint_controller.cpp",
+  "file": "/home/le/arx5-sdk/examples/test_joint_controller.cpp",
+  "output": "CMakeFiles/test_joint_controller.dir/examples/test_joint_controller.cpp.o"
+},
+{
+  "directory": "/home/le/arx5-sdk/build",
+  "command": "/home/le/anaconda3/envs/arx-py310/bin/x86_64-conda-linux-gnu-c++ -DFMT_SHARED -DSDK_ROOT=\\\"/home/le/arx5-sdk/build/..\\\" -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DSPDLOG_SHARED_LIB -I/home/le/arx5-sdk/include -I/home/le/anaconda3/envs/arx-py310/include/urdfdom_headers -I/home/le/anaconda3/envs/arx-py310/include/kdl_parser -isystem /home/le/anaconda3/envs/arx-py310/include/eigen3 -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/le/anaconda3/envs/arx-py310/include -g -std=gnu++14 -fPIE -o CMakeFiles/test_cartesian_controller.dir/examples/test_cartesian_controller.cpp.o -c /home/le/arx5-sdk/examples/test_cartesian_controller.cpp",
+  "file": "/home/le/arx5-sdk/examples/test_cartesian_controller.cpp",
+  "output": "CMakeFiles/test_cartesian_controller.dir/examples/test_cartesian_controller.cpp.o"
+},
+{
+  "directory": "/home/le/arx5-sdk/build/python",
+  "command": "/home/le/anaconda3/envs/arx-py310/bin/x86_64-conda-linux-gnu-c++ -DFMT_SHARED -DSDK_ROOT=\\\"/home/le/arx5-sdk/build/..\\\" -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DSPDLOG_SHARED_LIB -Darx5_interface_EXPORTS -I/home/le/arx5-sdk/include -I/home/le/anaconda3/envs/arx-py310/include/urdfdom_headers -I/home/le/arx5-sdk/python/../include -I/home/le/arx5-sdk/python/../include/libcan -I/home/le/anaconda3/envs/arx-py310/include/kdl_parser -isystem /home/le/anaconda3/envs/arx-py310/include/eigen3 -isystem /home/le/anaconda3/envs/arx-py310/include/python3.10 -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/le/anaconda3/envs/arx-py310/include -g -std=gnu++14 -fPIC -fvisibility=hidden -o CMakeFiles/arx5_interface.dir/arx5_pybind.cpp.o -c /home/le/arx5-sdk/python/arx5_pybind.cpp",
+  "file": "/home/le/arx5-sdk/python/arx5_pybind.cpp",
+  "output": "python/CMakeFiles/arx5_interface.dir/arx5_pybind.cpp.o"
+},
+{
+  "directory": "/home/le/arx5-sdk/build/python",
+  "command": "/home/le/anaconda3/envs/arx-py310/bin/x86_64-conda-linux-gnu-c++ -DFMT_SHARED -DSDK_ROOT=\\\"/home/le/arx5-sdk/build/..\\\" -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DSPDLOG_SHARED_LIB -Darx5_interface_EXPORTS -I/home/le/arx5-sdk/include -I/home/le/anaconda3/envs/arx-py310/include/urdfdom_headers -I/home/le/arx5-sdk/python/../include -I/home/le/arx5-sdk/python/../include/libcan -I/home/le/anaconda3/envs/arx-py310/include/kdl_parser -isystem /home/le/anaconda3/envs/arx-py310/include/eigen3 -isystem /home/le/anaconda3/envs/arx-py310/include/python3.10 -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/le/anaconda3/envs/arx-py310/include -g -std=gnu++14 -fPIC -fvisibility=hidden -o CMakeFiles/arx5_interface.dir/__/src/app/joint_controller.cpp.o -c /home/le/arx5-sdk/src/app/joint_controller.cpp",
+  "file": "/home/le/arx5-sdk/src/app/joint_controller.cpp",
+  "output": "python/CMakeFiles/arx5_interface.dir/__/src/app/joint_controller.cpp.o"
+},
+{
+  "directory": "/home/le/arx5-sdk/build/python",
+  "command": "/home/le/anaconda3/envs/arx-py310/bin/x86_64-conda-linux-gnu-c++ -DFMT_SHARED -DSDK_ROOT=\\\"/home/le/arx5-sdk/build/..\\\" -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DSPDLOG_SHARED_LIB -Darx5_interface_EXPORTS -I/home/le/arx5-sdk/include -I/home/le/anaconda3/envs/arx-py310/include/urdfdom_headers -I/home/le/arx5-sdk/python/../include -I/home/le/arx5-sdk/python/../include/libcan -I/home/le/anaconda3/envs/arx-py310/include/kdl_parser -isystem /home/le/anaconda3/envs/arx-py310/include/eigen3 -isystem /home/le/anaconda3/envs/arx-py310/include/python3.10 -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/le/anaconda3/envs/arx-py310/include -g -std=gnu++14 -fPIC -fvisibility=hidden -o CMakeFiles/arx5_interface.dir/__/src/app/cartesian_controller.cpp.o -c /home/le/arx5-sdk/src/app/cartesian_controller.cpp",
+  "file": "/home/le/arx5-sdk/src/app/cartesian_controller.cpp",
+  "output": "python/CMakeFiles/arx5_interface.dir/__/src/app/cartesian_controller.cpp.o"
+},
+{
+  "directory": "/home/le/arx5-sdk/build/python",
+  "command": "/home/le/anaconda3/envs/arx-py310/bin/x86_64-conda-linux-gnu-c++ -DFMT_SHARED -DSDK_ROOT=\\\"/home/le/arx5-sdk/build/..\\\" -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DSPDLOG_SHARED_LIB -Darx5_interface_EXPORTS -I/home/le/arx5-sdk/include -I/home/le/anaconda3/envs/arx-py310/include/urdfdom_headers -I/home/le/arx5-sdk/python/../include -I/home/le/arx5-sdk/python/../include/libcan -I/home/le/anaconda3/envs/arx-py310/include/kdl_parser -isystem /home/le/anaconda3/envs/arx-py310/include/eigen3 -isystem /home/le/anaconda3/envs/arx-py310/include/python3.10 -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/le/anaconda3/envs/arx-py310/include -g -std=gnu++14 -fPIC -fvisibility=hidden -o CMakeFiles/arx5_interface.dir/__/src/app/controller_base.cpp.o -c /home/le/arx5-sdk/src/app/controller_base.cpp",
+  "file": "/home/le/arx5-sdk/src/app/controller_base.cpp",
+  "output": "python/CMakeFiles/arx5_interface.dir/__/src/app/controller_base.cpp.o"
+},
+{
+  "directory": "/home/le/arx5-sdk/build/python",
+  "command": "/home/le/anaconda3/envs/arx-py310/bin/x86_64-conda-linux-gnu-c++ -DFMT_SHARED -DSDK_ROOT=\\\"/home/le/arx5-sdk/build/..\\\" -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DSPDLOG_SHARED_LIB -Darx5_interface_EXPORTS -I/home/le/arx5-sdk/include -I/home/le/anaconda3/envs/arx-py310/include/urdfdom_headers -I/home/le/arx5-sdk/python/../include -I/home/le/arx5-sdk/python/../include/libcan -I/home/le/anaconda3/envs/arx-py310/include/kdl_parser -isystem /home/le/anaconda3/envs/arx-py310/include/eigen3 -isystem /home/le/anaconda3/envs/arx-py310/include/python3.10 -fvisibility-inlines-hidden -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/le/anaconda3/envs/arx-py310/include -g -std=gnu++14 -fPIC -fvisibility=hidden -o CMakeFiles/arx5_interface.dir/__/src/utils.cpp.o -c /home/le/arx5-sdk/src/utils.cpp",
+  "file": "/home/le/arx5-sdk/src/utils.cpp",
+  "output": "python/CMakeFiles/arx5_interface.dir/__/src/utils.cpp.o"
+}
+]

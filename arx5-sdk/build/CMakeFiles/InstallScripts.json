@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/le/arx5-sdk/build/cmake_install.cmake",
+		"/home/le/arx5-sdk/build/python/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
