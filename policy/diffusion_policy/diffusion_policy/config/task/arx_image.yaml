@@ -1,0 +1,35 @@
+name: arx_image
+
+zarr_path: &zarr_path /root/shared-nvme/dataset/wrist_pick_wood_resize.zarr
+
+image_shape: &image_shape [3, 240, 320]
+
+# Shape metadata
+shape_meta: &shape_meta
+  obs:
+    camera_0:
+      shape: *image_shape
+      type: rgb
+    # 3 position + 3 orientation + 1 gripper
+    state:
+      shape: [7]
+      type: low_dim
+  action:
+    # 3 delta position + 3 delta orientation + 1 gripper
+    shape: [7]
+
+dataset:
+  _target_: diffusion_policy.dataset.arx_image_dataset.ArxImageDataset
+  shape_meta: *shape_meta
+  zarr_path: *zarr_path
+  horizon: ${horizon}
+  pad_before: ${eval:'${n_obs_steps}-1'}
+  pad_after: ${eval:'${n_action_steps}-1'}
+  n_obs_steps: ${n_obs_steps}
+  seed: 42
+  val_ratio: 0.0
+  max_train_episodes: null
+
+env_runner:
+  _target_: diffusion_policy.env_runner.dummy_image_runner.DummyImageRunner
+
